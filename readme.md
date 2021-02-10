@@ -2,10 +2,15 @@
 
 This is the Express backend for Jobly, version 2.
 
-To run this:
+To run this server:
 
-    node server.js
+    npm start
+
+To run server in development mode (requires nodemon):
+
+    npm run dev
     
 To run the tests:
 
-    jest -i
+    npm test
+
