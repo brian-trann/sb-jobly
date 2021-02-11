@@ -193,7 +193,33 @@ describe('dataToFilterBy', () => {
 		const negative = { minEmployees: '-1' };
 		expect(() => {
 			Company.dataToFilterBy(negative);
-		}).toThrowError(new BadRequestError('Minimum employees can not be negative'));
+		}).toThrowError(BadRequestError);
+	});
+
+	test('should be able choose different allowed filtering parameters', () => {
+		const data = { minEmployees: '2' };
+		const onlyMaxAllowed = [ 'maxEmployees' ];
+		expect(() => {
+			Company.dataToFilterBy(data, onlyMaxAllowed);
+		}).toThrowError(BadRequestError);
+	});
+
+	test('should throw error if any value in object is empty', () => {
+		const data = { minEmployees: '2', name: '' };
+		expect(() => {
+			Company.dataToFilterBy(data);
+		}).toThrowError(new BadRequestError('Search parameters can not be empty'));
+	});
+
+	test('should throw error if minEmployee || maxEmployee value is NaN', () => {
+		const minData = { minEmployee: 'a', maxEmployee: '1' };
+		const maxData = { maxEmployee: 'a', minEmployee: '1' };
+		expect(() => {
+			Company.dataToFilterBy(minData);
+		}).toThrowError(BadRequestError);
+		expect(() => {
+			Company.dataToFilterBy(maxData);
+		}).toThrowError(BadRequestError);
 	});
 
 	test('should generate the same number of elements in paramValues as the values in data, given valid data', () => {
@@ -219,12 +245,56 @@ describe('dataToFilterBy', () => {
 		const res = Company.dataToFilterBy(data);
 		expect(res.paramValues.length).toBe(res.whereClause.split('AND').length);
 	});
-	test('should be able choose different allowed filtering parameters', () => {
-		const data = { minEmployees: '2' };
-		const onlyMaxAllowed = [ 'maxEmployees' ];
-		expect(() => {
-			Company.dataToFilterBy(data, onlyMaxAllowed);
-		}).toThrowError(BadRequestError);
+});
+
+/************************************** validateData */
+describe('validateData', () => {
+	const allowed = [ 'name', 'minEmployees', 'maxEmployees' ];
+
+	test('should return valid object with no errors in , given valid data', () => {
+		const data = { minEmployees: '1', maxEmployees: '3', name: 'c' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeTruthy();
+		expect(res.error).toBe('');
+	});
+	test('should return valid object with no errors in , given valid data: only one property', () => {
+		const data = { minEmployees: '1' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeTruthy();
+		expect(res.error).toBe('');
+	});
+	test('should return invalid object if a data property is not allowed', () => {
+		const nameOnly = [ 'name' ];
+		const data = { minEmployees: '1', maxEmployees: '3', name: 'c' };
+		const res = Company.validateData(data, nameOnly);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe('A search parameter was not allowed');
+	});
+	test('should return invalid object if a single data value was empty', () => {
+		const data = { minEmployees: '1', maxEmployees: '3', name: '' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe('Search parameters can not be empty');
+	});
+	test('should return invalid object if a number was not used for min/max employee', () => {
+		const data = { minEmployees: '1', maxEmployees: 'a' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe('Integers are only allowed');
+	});
+	test('should return invalid if evaluated minEmployee > maxEmployee', () => {
+		const data = { minEmployees: '3', maxEmployees: '1' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe(
+			`minEmployees(${data.minEmployees}) can not be greather than maxEmployees(${data.maxEmployees})`
+		);
+	});
+	test('should return invalid if evaluated minEmployee < 0', () => {
+		const data = { minEmployees: '-1' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe('Minimum employees can not be negative');
 	});
 });
 

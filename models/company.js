@@ -81,11 +81,6 @@ class Company {
    * This array is to be the second argument in the db.query
    *    ['1']
    * 
-   * If a single key in the data object is not allowed:
-   *     Throws BadRequestError
-   * 
-   * If minEmployees > maxEmployees || minEmployees < 0: 
-   *    Throws BadRequestError
    * 
    * @param {Object.<string,string>} data 
    * data is the raw request query parameters to be validated and to be filtered by
@@ -97,19 +92,15 @@ class Company {
    */
 	static dataToFilterBy(data, filters) {
 		const allowedParameters = filters || [ 'name', 'minEmployees', 'maxEmployees' ];
-		const allowed = Object.keys(data).every((key) => allowedParameters.includes(key));
-		if (!allowed) throw new BadRequestError('A search parameter was not allowed');
 		const { minEmployees, maxEmployees, name } = data;
 
 		const whereArr = [];
 		const paramValues = [];
 
-		if (+minEmployees > +maxEmployees) {
-			throw new BadRequestError(
-				`minEmployees(${minEmployees}) can not be greather than maxEmployees(${maxEmployees})`
-			);
-		} else if (+minEmployees < 0) {
-			throw new BadRequestError('Minimum employees can not be negative');
+		const result = Company.validateData(data, allowedParameters);
+
+		if (!result.valid) {
+			throw new BadRequestError(result.error);
 		}
 
 		if (minEmployees) {
@@ -129,6 +120,48 @@ class Company {
 			whereClause : whereArr.join(' AND '),
 			paramValues
 		};
+	}
+
+	/**
+   * validateData is a helper function that will return an object. This helper function
+   * is to be used inside of dataToFilterBy.
+   * 
+   *      if {data} properties are all valid, the returning property will be true
+   *      otherwise .valid property will be false
+   * 
+   * If data is not valid, depending on the error, the .error property will
+   *    contain the error message associated with what triggered the invalid data
+   * 
+   * @param {*} data - Query Parameters to be validated
+   * @param {*} allowedParameters - Array of filtering parameters
+   */
+	static validateData(data, allowedParameters) {
+		const validated = {
+			valid : false,
+			error : ''
+		};
+
+		const allowed = Object.keys(data).every((key) => allowedParameters.includes(key));
+		const emptyValues = Object.values(data).some((value) => value === '');
+		const { minEmployees, maxEmployees } = data;
+
+		if (!allowed) {
+			validated.error = 'A search parameter was not allowed';
+		} else if (emptyValues) {
+			validated.error = 'Search parameters can not be empty';
+		} else if (
+			(minEmployees && !Number.isInteger(+minEmployees)) ||
+			(maxEmployees && !Number.isInteger(+maxEmployees))
+		) {
+			validated.error = 'Integers are only allowed';
+		} else if (+minEmployees > +maxEmployees) {
+			validated.error = `minEmployees(${minEmployees}) can not be greather than maxEmployees(${maxEmployees})`;
+		} else if (+minEmployees < 0) {
+			validated.error = 'Minimum employees can not be negative';
+		} else {
+			validated.valid = true;
+		}
+		return validated;
 	}
 
 	/** Given a company handle, return data about company.
