@@ -231,7 +231,7 @@ describe('PATCH /users/:username', () => {
 	});
 
 	test('unauth for anon', async function() {
-		const resp = await request(app).patch(`/users/u1`).send({
+		const resp = await request(app).patch('/users/u1').send({
 			firstName : 'New'
 		});
 		expect(resp.statusCode).toEqual(401);
