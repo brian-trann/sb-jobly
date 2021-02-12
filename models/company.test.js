@@ -276,6 +276,12 @@ describe('validateData', () => {
 		expect(res.valid).toBeFalsy();
 		expect(res.error).toBe('Search parameters can not be empty');
 	});
+	test('should return invalid object if multiple data values are empty', () => {
+		const data = { minEmployees: '1', maxEmployees: '', name: '' };
+		const res = Company.validateData(data, allowed);
+		expect(res.valid).toBeFalsy();
+		expect(res.error).toBe('Search parameters can not be empty');
+	});
 	test('should return invalid object if a number was not used for min/max employee', () => {
 		const data = { minEmployees: '1', maxEmployees: 'a' };
 		const res = Company.validateData(data, allowed);
