@@ -6,7 +6,7 @@ const jsonschema = require('jsonschema');
 
 const { BadRequestError } = require('../expressError');
 const { ensureAdmin } = require('../middleware/auth');
-const Job = require('../models/jobs');
+const Job = require('../models/job');
 
 // API validation
 const jobNew = require('../schemas/jobNew.json');
@@ -75,7 +75,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
 	try {
-		const job = await Job.jet(req.params.id);
+		const job = await Job.get(req.params.id);
 		return res.json({ job });
 	} catch (error) {
 		return next(error);
