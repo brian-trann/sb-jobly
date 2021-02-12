@@ -49,7 +49,7 @@ router.post('/', ensureAdmin, async function(req, res, next) {
  * Authorization required: admin
  **/
 
-router.get('/', ensureLoggedIn, async function(req, res, next) {
+router.get('/', ensureAdmin, async function(req, res, next) {
 	try {
 		const users = await User.findAll();
 		return res.json({ users });
