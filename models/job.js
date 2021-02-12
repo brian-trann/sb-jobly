@@ -9,7 +9,8 @@ class Job {
 	/**
    * Create a job
    */
-	static async create({ title, salary, equity, companyHandle }) {
+	static async create(data) {
+		const { title, salary, equity, companyHandle } = data;
 		const res = await db.query(
 			`INSERT INTO jobs (title,
                         salary,
@@ -33,8 +34,7 @@ class Job {
    * 
    * Returns Array of Jobs [{ id, title, salary, equity, companyHandle, companyName }, ...]
    */
-	static async findAll(data) {
-		const { title, minSalary, hasEquity } = data;
+	static async findAll({ title, minSalary, hasEquity } = {}) {
 		const whereClause = [];
 		const values = [];
 		let whereInsertion = '';
@@ -64,7 +64,8 @@ class Job {
           FROM jobs AS j
           LEFT JOIN companies AS c
           ON c.handle = j.company_handle
-          ${whereInsertion}`,
+          ${whereInsertion}
+					ORDER BY title`,
 			values
 		);
 		return jobsResults.rows;
