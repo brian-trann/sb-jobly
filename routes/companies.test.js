@@ -206,12 +206,30 @@ describe('PATCH /companies/:handle', function() {
 			.set('authorization', `Bearer ${adminToken}`);
 		expect(resp.statusCode).toEqual(400);
 	});
+	test('empty string should respond 400 ', async () => {
+		const resp = await request(app)
+			.patch(`/companies/c1`)
+			.send({
+				handle : ''
+			})
+			.set('authorization', `Bearer ${adminToken}`);
+		expect(resp.statusCode).toEqual(400);
+	});
 
 	test('bad request on invalid data', async function() {
 		const resp = await request(app)
 			.patch(`/companies/c1`)
 			.send({
 				logoUrl : 'not-a-url'
+			})
+			.set('authorization', `Bearer ${adminToken}`);
+		expect(resp.statusCode).toEqual(400);
+	});
+	test('bad request with empty string as data', async function() {
+		const resp = await request(app)
+			.post('/companies')
+			.send({
+				name : ''
 			})
 			.set('authorization', `Bearer ${adminToken}`);
 		expect(resp.statusCode).toEqual(400);

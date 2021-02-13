@@ -43,14 +43,27 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-	static async findAll(data) {
+	static async findAll({ minEmployees, maxEmployees, name } = {}) {
+		const whereClause = [];
+		const values = [];
 		let whereInsertion = '';
-		let values;
-
-		if (Object.keys(data || {}).length > 0) {
-			const { whereClause, paramValues } = Company.dataToFilterBy(data);
-			whereInsertion += 'WHERE ' + whereClause;
-			values = paramValues;
+		if (+minEmployees > +maxEmployees) {
+			throw new BadRequestError('minEmployees can not be greater than maxEmployees');
+		}
+		if (name) {
+			values.push(name);
+			whereClause.push(`name ~* $${values.length}`);
+		}
+		if (minEmployees) {
+			values.push(minEmployees);
+			whereClause.push(`num_employees >= $${values.length}`);
+		}
+		if (maxEmployees) {
+			values.push(maxEmployees);
+			whereClause.push(`num_employees <= $${values.length}`);
+		}
+		if (whereClause.length > 0) {
+			whereInsertion = 'WHERE ' + whereClause.join(' AND ');
 		}
 
 		const companiesRes = await db.query(
@@ -66,102 +79,6 @@ class Company {
 		);
 
 		return companiesRes.rows;
-	}
-
-	/**
-   * dataToFilterBy 
-   * 
-   * This is a helper function that creates a SQL WHERE clause and parameterized 
-   * values given valid query parameters. 
-   * 
-   * whereClause is the formatted partial SQL string that will be the where condition:
-   *    "num_employees >= $1"
-   * 
-   * paramValues is the parameterized array of values that will correspond to each whereClause:
-   * This array is to be the second argument in the db.query
-   *    ['1']
-   * 
-   * 
-   * @param {Object.<string,string>} data 
-   * data is the raw request query parameters to be validated and to be filtered by
-   * 
-   * @param {String[]} filters - String array of allowed filtering query parameters
-   * The default query params are: 'name', 'minEmployees', and 'maxEmployees'.
-   * 
-   * @return {FilterBy} { whereClause: String, paramValues: Array of parameterized values}
-   */
-	static dataToFilterBy(data, filters) {
-		const allowedParameters = filters || [ 'name', 'minEmployees', 'maxEmployees' ];
-		const { minEmployees, maxEmployees, name } = data;
-
-		const whereArr = [];
-		const paramValues = [];
-
-		const result = Company.validateData(data, allowedParameters);
-
-		if (!result.valid) {
-			throw new BadRequestError(result.error);
-		}
-
-		if (minEmployees) {
-			paramValues.push(minEmployees);
-			whereArr.push(`num_employees >= $${paramValues.length}`);
-		}
-		if (maxEmployees) {
-			paramValues.push(maxEmployees);
-			whereArr.push(`num_employees <= $${paramValues.length}`);
-		}
-		if (name) {
-			paramValues.push(name);
-			whereArr.push(`name ~* $${paramValues.length}`);
-		}
-
-		return {
-			whereClause : whereArr.join(' AND '),
-			paramValues
-		};
-	}
-
-	/**
-   * validateData is a helper function that will return an object. This helper function
-   * is to be used inside of dataToFilterBy.
-   * 
-   *      if {data} properties are all valid, the returning property will be true
-   *      otherwise .valid property will be false
-   * 
-   * If data is not valid, depending on the error, the .error property will
-   *    contain the error message associated with what triggered the invalid data
-   * 
-   * @param {*} data - Query Parameters to be validated
-   * @param {*} allowedParameters - Array of filtering parameters
-   */
-	static validateData(data, allowedParameters) {
-		const validated = {
-			valid : false,
-			error : ''
-		};
-
-		const allowed = Object.keys(data).every((key) => allowedParameters.includes(key));
-		const emptyValues = Object.values(data).some((value) => value === '');
-		const { minEmployees, maxEmployees } = data;
-
-		if (!allowed) {
-			validated.error = 'A search parameter was not allowed';
-		} else if (emptyValues) {
-			validated.error = 'Search parameters can not be empty';
-		} else if (
-			(minEmployees && !Number.isInteger(+minEmployees)) ||
-			(maxEmployees && !Number.isInteger(+maxEmployees))
-		) {
-			validated.error = 'Integers are only allowed';
-		} else if (+minEmployees > +maxEmployees) {
-			validated.error = `minEmployees(${minEmployees}) can not be greather than maxEmployees(${maxEmployees})`;
-		} else if (+minEmployees < 0) {
-			validated.error = 'Minimum employees can not be negative';
-		} else {
-			validated.valid = true;
-		}
-		return validated;
 	}
 
 	/** Given a company handle, return data about company.
