@@ -1,6 +1,12 @@
-# Jobly Backend
+# Springboard Jobly
 
-This is the Express backend for Jobly, version 2.
+This is a multi-day exercise to practice Node, Express, and PostgreSQL with relationships.
+
+## Usage
+### Installation:
+Download or clone repo. In the root directory of the project run:
+
+    npm install
 
 To run this server:
 
@@ -13,4 +19,3 @@ To run server in development mode (requires nodemon):
 To run the tests:
 
     npm test
-
