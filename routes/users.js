@@ -114,7 +114,9 @@ router.delete('/:username', ensureAuthUserOrAdmin, async function(req, res, next
 });
 /** POST 
  *  Route for a user applying to a job
+ *  returns: {applied: jobId}
  * 
+ * Authorization required: admin || user === username
  */
 router.post('/:username/jobs/:id', ensureAuthUserOrAdmin, async function(req, res, next) {
 	try {

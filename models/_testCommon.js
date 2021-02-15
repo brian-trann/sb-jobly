@@ -37,11 +37,11 @@ async function commonBeforeAll() {
 	);
 	jobId.rows.forEach((job) => testJobsIds.push(job.id));
 
-	// await db.query(
-	// 	`INSERT INTO applications (username, job_id)
-	// 		VALUES ('u1', $1)`,
-	// 	[ testJobsIds[0] ]
-	// );
+	await db.query(
+		`INSERT INTO applications (username, job_id)
+			VALUES ('u1', $1)`,
+		[ testJobsIds[0] ]
+	);
 }
 
 async function commonBeforeEach() {

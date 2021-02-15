@@ -64,6 +64,8 @@ async function commonBeforeAll() {
 	testJobsIds.push(job1.id);
 	const job2 = await Job.create({ title: 'job2', salary: 10000, companyHandle: 'c1' });
 	testJobsIds.push(job2.id);
+
+	await User.applyToJob('u1', testJobsIds[0]);
 }
 
 async function commonBeforeEach() {
