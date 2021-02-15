@@ -47,6 +47,7 @@ class Company {
 		const whereClause = [];
 		const values = [];
 		let whereInsertion = '';
+
 		if (+minEmployees > +maxEmployees) {
 			throw new BadRequestError('minEmployees can not be greater than maxEmployees');
 		}
